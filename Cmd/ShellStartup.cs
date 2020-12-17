@@ -9,7 +9,7 @@
         /// <summary> Дефолтное предопределенное значение для открытия оболочки и управление средствами csharp </summary>
         public static ShellStartup Default = new ShellStartup
         {
-            Argument = "",
+            Argument = "/C",
             Command = "cmd.exe",
             AllMessageInOutput = true,
             Redirect = true,
