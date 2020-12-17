@@ -1,12 +1,11 @@
 ﻿using System;
-using System.Diagnostics;
 using System.Text;
-using System.Threading.Tasks;
+using System.Diagnostics;
+using System.Globalization;
 using System.Windows.Forms;
 
 namespace Cmd
 {
-
     public class Shell : IDisposable
     {
         private ShellStartup _startup;
@@ -14,6 +13,8 @@ namespace Cmd
         private ProcessStartInfo _info = null;
         private DateTime _dt;
         private int _delayTime = 10000;
+
+        public bool IsActive { get; private set; } = false;
 
         /// <summary> Результат выполнения комманды </summary>
         public string CmdResult { get; private set; }
@@ -31,7 +32,7 @@ namespace Cmd
         public string ErrorResult { get; private set; }
 
         public event ShellHandleLine OnOutputLine, OnErrorLine;
-        public Shell(ShellStartup startup=default)
+        public Shell(ShellStartup startup = default)
         {
             Init(startup);
         }
@@ -43,43 +44,68 @@ namespace Cmd
             {
                 CreateNoWindow = !_startup.Visible,
                 UseShellExecute = !_startup.Redirect,
-                WindowStyle = !_startup.Visible ? ProcessWindowStyle.Normal : ProcessWindowStyle.Hidden,
+                WindowStyle = _startup.Visible ? ProcessWindowStyle.Normal : ProcessWindowStyle.Hidden,
                 RedirectStandardOutput = _startup.Redirect,
                 RedirectStandardError = _startup.Redirect,
                 RedirectStandardInput = _startup.Redirect,
                 ErrorDialog = _startup.ErrorDialog,
                 StandardOutputEncoding = Encoding.UTF8,
-                Verb = _startup.Runas ? "runas" : ""
+                StandardErrorEncoding = Encoding.UTF8,
+                Verb = _startup.Runas ? "runas" : "",
             };
-            if (_startup.Redirect && _process != null)
+            _process = new Process { StartInfo = _info };
+            if (_startup.Redirect)
             {
-                _process.BeginOutputReadLine();
-                _process.BeginErrorReadLine();
+                IsActive = _process.Start();
                 _process.OutputDataReceived += ProcessOnOutputDataReceived;
                 _process.ErrorDataReceived += ProcessOnErrorDataReceived;
+                _process.Exited += (sender, args) => IsActive = false;
+                _process.BeginOutputReadLine();
+                _process.BeginErrorReadLine();
             }
-            _process = Process.Start(_info);
+            else
+            {
+                OutputResult = CmdResult = _process.StandardOutput.ReadToEnd();
+                ErrorResult = CmdResult = _process.StandardOutput.ReadToEnd();
+            }
+            //Command("chcp 866");
+            //Command("ver");
+            //Command("echo (c) Корпорация Майкрософт (Microsoft Corporation), 2020. Все права защищены.");
             return this;
         }
 
         private string RessiveDate(DataReceivedEventArgs e)
         {
-            string msg = e.Data.Replace(Application.StartupPath, null) + Environment.NewLine;
-            _dt = DateTime.Now.AddMilliseconds(800);
-            return msg + Environment.NewLine;
+            if (e.Data != null)
+            {
+                string msg = e.Data.Replace(Application.StartupPath, null);
+                _dt = DateTime.Now.AddSeconds(1);
+                return msg!="" ? msg + Environment.NewLine : string.Empty;
+                //Encoding.Default.GetString(Encoding.GetEncoding(CultureInfo.CurrentCulture.TextInfo.OEMCodePage).GetBytes(msg))
+            }
+            return string.Empty;
         }
         private void ProcessOnErrorDataReceived(object sender, DataReceivedEventArgs e)
         {
             var line = RessiveDate(e);
-            OnErrorLine?.Invoke(this,line);
-            CmdError = line + Environment.NewLine;
-            ErrorResult += CmdResult;
+            if (line != null)
+            {
+                OnErrorLine?.Invoke(this, line);
+                CmdError = line;
+                ErrorResult += CmdResult;
+                if (_startup.AllMessageInOutput)
+                    CmdResult += line + Environment.NewLine;
+            }
         }
         private void ProcessOnOutputDataReceived(object sender, DataReceivedEventArgs e)
         {
             var line = RessiveDate(e);
-            OnOutputLine?.Invoke(this, line);
-            CmdResult = line + Environment.NewLine;
+            if (line != null)
+            {
+                OnOutputLine?.Invoke(this, line);
+                CmdResult = line + Environment.NewLine;
+            }
+
             OutputResult += CmdResult;
         }
 
@@ -87,12 +113,16 @@ namespace Cmd
         {
             LastCommand = command;
             _process.StandardInput.WriteLine(command);
+            _dt = DateTime.Now.AddSeconds(3);
+            while (_dt>DateTime.Now)
+            {
+               Application.DoEvents(); 
+            }
         }
 
         public void Dispose()
         {
             _process?.Dispose();
-            _info = null;
         }
     }
 }

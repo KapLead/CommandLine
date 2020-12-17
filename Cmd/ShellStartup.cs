@@ -9,8 +9,8 @@
         /// <summary> Дефолтное предопределенное значение для открытия оболочки и управление средствами csharp </summary>
         public static ShellStartup Default = new ShellStartup
         {
-            Argument = "/C",
             Command = "cmd.exe",
+            Argument = "/K chcp 65001",
             AllMessageInOutput = true,
             Redirect = true,
             ErrorDialog = true,
