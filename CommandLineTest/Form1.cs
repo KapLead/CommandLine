@@ -38,10 +38,6 @@ namespace CommandLineTest
             })));
         }
 
-        private void panel1_PreviewKeyDown(object sender, PreviewKeyDownEventArgs e)
-        {
-        }
-
         private void textBox2_KeyDown(object sender, KeyEventArgs e)
         {
             if (e.KeyCode == Keys.Enter)

@@ -61,7 +61,6 @@ namespace CommandLineTest
             this.panel1.Padding = new System.Windows.Forms.Padding(3);
             this.panel1.Size = new System.Drawing.Size(685, 21);
             this.panel1.TabIndex = 1;
-            this.panel1.PreviewKeyDown += new System.Windows.Forms.PreviewKeyDownEventHandler(this.panel1_PreviewKeyDown);
             // 
             // textBox2
             // 
