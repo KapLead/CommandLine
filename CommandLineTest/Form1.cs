@@ -46,7 +46,7 @@ namespace CommandLineTest
         {
             if (e.KeyCode == Keys.Enter)
             {
-                shell.Command(textBox2.Text);
+                shell.CommandWhile(textBox2.Text);
                 textBox2.Text = "";
                 textBox2.Focus();
             }

@@ -37,6 +37,8 @@ namespace Cmd
             Init(startup);
         }
 
+        /// <summary> Инициализация оболочки command line с указанными параметрами </summary>
+        /// <param name="startup"> Параметры запуска оболочки </param>
         public Shell Init(ShellStartup startup)
         {
             _startup = startup;
@@ -68,12 +70,12 @@ namespace Cmd
                 OutputResult = CmdResult = _process.StandardOutput.ReadToEnd();
                 ErrorResult = CmdResult = _process.StandardOutput.ReadToEnd();
             }
-            //Command("chcp 866");
-            //Command("ver");
-            //Command("echo (c) Корпорация Майкрософт (Microsoft Corporation), 2020. Все права защищены.");
             return this;
         }
 
+        /// <summary> Обработка части ответа и его форматирование </summary>
+        /// <param name="e"> Параметр события вывода результата команды </param>
+        /// <returns> Результирующая строка ответа (или его части если ответ многострочный) </returns>
         private string RessiveDate(DataReceivedEventArgs e)
         {
             if (e.Data != null)
@@ -109,15 +111,34 @@ namespace Cmd
             OutputResult += CmdResult;
         }
 
+        /// <summary> Выполнить указанную команду </summary>
+        /// <param name="command"> Команда </param>
         public void Command(string command)
         {
             LastCommand = command;
             _process.StandardInput.WriteLine(command);
             _dt = DateTime.Now.AddSeconds(3);
+        }
+
+        /// <summary> Ожидание выполнения комманды </summary>
+        public void WhileResult()
+        {
             while (_dt>DateTime.Now)
             {
                Application.DoEvents(); 
             }
+        }
+
+        /// <summary> Выполнить указанную команду и дождаться результата </summary>
+        /// <param name="command"> Команда </param>
+        /// <param name="delay"> Интервал ожидания </param>
+        /// <returns> Результат выполнения команды </returns>
+        public string CommandWhile(string command, int delay = 5)
+        {
+            Command(command);
+            _dt=_dt.AddSeconds(5);
+            WhileResult();
+            return CmdResult;
         }
 
         public void Dispose()
