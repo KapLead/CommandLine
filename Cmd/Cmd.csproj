@@ -41,6 +41,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ShellAsync.cs" />
     <Compile Include="ShellDelegates.cs" />
     <Compile Include="ShellStartup.cs" />
     <Compile Include="Shell.cs" />

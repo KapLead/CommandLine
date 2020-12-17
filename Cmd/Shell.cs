@@ -2,7 +2,10 @@
 using System.Text;
 using System.Diagnostics;
 using System.Globalization;
+using System.Reflection;
+using System.Threading;
 using System.Windows.Forms;
+using ThreadState = System.Threading.ThreadState;
 
 namespace Cmd
 {
@@ -11,9 +14,11 @@ namespace Cmd
         private ShellStartup _startup;
         private Process _process = null;
         private ProcessStartInfo _info = null;
-        private DateTime _dt;
+        internal DateTime _dt;
         private int _delayTime = 10000;
+        private bool _finish = false;
 
+            
         public bool IsActive { get; private set; } = false;
 
         /// <summary> Результат выполнения комманды </summary>
@@ -32,6 +37,7 @@ namespace Cmd
         public string ErrorResult { get; private set; }
 
         public event ShellHandleLine OnOutputLine, OnErrorLine;
+    
         public Shell(ShellStartup startup = default)
         {
             Init(startup);
@@ -87,6 +93,7 @@ namespace Cmd
             }
             return string.Empty;
         }
+
         private void ProcessOnErrorDataReceived(object sender, DataReceivedEventArgs e)
         {
             var line = RessiveDate(e);
@@ -99,6 +106,7 @@ namespace Cmd
                     CmdResult += line + Environment.NewLine;
             }
         }
+
         private void ProcessOnOutputDataReceived(object sender, DataReceivedEventArgs e)
         {
             var line = RessiveDate(e);
@@ -115,6 +123,7 @@ namespace Cmd
         /// <param name="command"> Команда </param>
         public void Command(string command)
         {
+            _finish = false;
             LastCommand = command;
             _process.StandardInput.WriteLine(command);
             _dt = DateTime.Now.AddSeconds(3);
@@ -123,10 +132,16 @@ namespace Cmd
         /// <summary> Ожидание выполнения комманды </summary>
         public void WhileResult()
         {
-            while (_dt>DateTime.Now)
+            while (_dt>DateTime.Now && !_finish)
             {
                Application.DoEvents(); 
             }
+        }
+
+        /// <summary> Остановка ожидания завершения комманды </summary>
+        public void CommandFinish()
+        {
+            _finish = true;
         }
 
         /// <summary> Выполнить указанную команду и дождаться результата </summary>
@@ -138,6 +153,7 @@ namespace Cmd
             Command(command);
             _dt=_dt.AddSeconds(5);
             WhileResult();
+
             return CmdResult;
         }
 

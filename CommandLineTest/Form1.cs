@@ -6,7 +6,7 @@ namespace CommandLineTest
 {
     public partial class Form1 : Form
     {
-        private Cmd.Shell shell = null;
+        private ShellAsync shell = null;
 
         public Form1()
         {
@@ -16,7 +16,7 @@ namespace CommandLineTest
         private void Form1_Load(object sender, EventArgs e)
         {
 
-            shell = new Shell(new ShellStartup
+            shell = new ShellAsync(new ShellStartup
             {
                 AllMessageInOutput = true, 
                 Redirect = true, ErrorDialog = false, Visible = false, Runas = false,
@@ -28,8 +28,7 @@ namespace CommandLineTest
 
         private void ShellOnOnOutputLine(Shell sender, string line)
         {
-            textBox1.Invoke(new Action((() =>
-            {
+            textBox1.Invoke(new Action((() =>{
                 textBox1.Text += line;
                 textBox1.SelectionStart = textBox1.TextLength - 1;
                 textBox1.SelectionLength = 0;
@@ -42,7 +41,7 @@ namespace CommandLineTest
         {
             if (e.KeyCode == Keys.Enter)
             {
-                shell.CommandWhile(textBox2.Text);
+                shell.CommandAsync(textBox2.Text);
                 textBox2.Text = "";
                 textBox2.Focus();
             }
